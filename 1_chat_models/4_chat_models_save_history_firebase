@@ -3,6 +3,10 @@ from dotenv import load_dotenv
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 from langchain_google_firestore import FirestoreChatMessageHistory
 from google.cloud import firestore
+import os
+
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/Users/thalesvignoli/Downloads/history-chat-llm-8d984000b3ea.json"
+
 
 load_dotenv()
 
@@ -20,20 +24,16 @@ chat_history = FirestoreChatMessageHistory(
     client=client,
 )
 
-system_message = SystemMessage(content = "You are my AI assistant")
-chat_history.append(system_message)
-
 while True:
     user = input("You: ")
     if user.lower() == "stop":
         break
 
-    chat_history.append(HumanMessage(content=user))
-    result = llm.invoke(chat_history)
-    response = result.content
-    chat_history.append(AIMessage(content=response))
+    chat_history.add_user_message(user)
+    result = llm.invoke(chat_history.messages)
+    chat_history.add_ai_message(result)
 
-    print(f"AI: {response}")
+    print(f"AI: {result.content}")
 
 print("---History Chat----")
 print(chat_history)
